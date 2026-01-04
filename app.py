@@ -103,10 +103,10 @@ if st.button("✨ Generate Resume", type="primary"):
             except Exception as e:
                 print(f"DB Log Failed: {e}") 
         
-        # B. AI GENERATION (Indeed-Level Prompting)
+        # B. AI GENERATION (The "Tank" Model)
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-pro')
+            model = genai.GenerativeModel('gemini-pro')
 
             with st.spinner("🤖 AI is optimizing for ATS keywords..."):
                 prompt = f"""
