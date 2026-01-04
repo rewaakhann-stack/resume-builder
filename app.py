@@ -103,12 +103,38 @@ if st.button("✨ Generate Resume", type="primary"):
             except Exception as e:
                 print(f"DB Log Failed: {e}") 
         
-        # B. AI GENERATION (The "Tank" Model)
+      # B. AI GENERATION (Auto-Detect Model)
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            
+            # 1. Ask Google what models are actually available for this Key
+            available_models = []
+            try:
+                for m in genai.list_models():
+                    if 'generateContent' in m.supported_generation_methods:
+                        available_models.append(m.name)
+            except Exception as e:
+                st.error(f"⚠️ Key Error: Your API Key works, but cannot list models. Error: {e}")
+                st.stop()
 
-            with st.spinner("🤖 AI is optimizing for ATS keywords..."):
+            # 2. Pick the smartest model available (The "Gemini 3" Logic)
+            if 'models/gemini-1.5-pro' in available_models:
+                target_model = 'gemini-1.5-pro' # The "Gemini 3" feel
+            elif 'models/gemini-1.5-flash' in available_models:
+                target_model = 'gemini-1.5-flash'
+            elif 'models/gemini-pro' in available_models:
+                target_model = 'gemini-pro'
+            else:
+                # If none of the famous ones exist, grab the first one that works
+                target_model = available_models[0] if available_models else 'gemini-1.5-pro'
+
+            # 3. Run the Engine
+            model = genai.GenerativeModel(target_model)
+            
+            # (Optional Debug: Show user which model was picked)
+            print(f"DEBUG: Using model {target_model}") 
+
+            with st.spinner(f"🤖 AI ({target_model.split('/')[-1]}) is rewriting your resume..."):
                 prompt = f"""
                 You are an expert Resume Writer and ATS Algorithm Specialist. 
                 Rewrite the following "Old Experience" to perfectly match the "Target Job".
@@ -136,6 +162,7 @@ if st.button("✨ Generate Resume", type="primary"):
 
         except Exception as e:
             st.error(f"AI Error: {str(e)}")
+            st.info("💡 Tip: If this says '404', your API Key might be from the wrong Google service. Try creating a new key at aistudio.google.com")
 
 # --- 6. PDF GENERATION ---
 if 'step' in st.session_state and st.session_state['step'] >= 2:
